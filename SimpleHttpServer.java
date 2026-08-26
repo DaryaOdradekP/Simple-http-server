@@ -16,12 +16,14 @@ public class SimpleHttpServer {
             try (Socket clientSocket = serverSocket.accept(); BufferedReader input = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8)); OutputStream output = clientSocket.getOutputStream()) {
 
-                System.out.println("Request from browser:");
+                HttpParser parser = new HttpParser();
+                HttpRequest request = parser.parse(input);
 
-                String line;
-                while ((line = input.readLine()) != null && !line.isEmpty()) {
-                    System.out.println(line);
-                }
+                System.out.println("Parsed request:");
+                System.out.println("Method: " + request.getMethod());
+                System.out.println("Path: " + request.getPath());
+                System.out.println("Version: " + request.getVersion());
+                System.out.println("Host: " + request.getHeader("Host"));
 
                 String html = "<h1>Hello from Java!</h1>";
                 byte[] body = html.getBytes(StandardCharsets.UTF_8);
