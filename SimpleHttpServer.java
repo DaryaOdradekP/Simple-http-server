@@ -25,18 +25,14 @@ public class SimpleHttpServer {
                 System.out.println("Version: " + request.getVersion());
                 System.out.println("Host: " + request.getHeader("Host"));
 
-                String html = "<h1>Hello from Java!</h1>";
-                byte[] body = html.getBytes(StandardCharsets.UTF_8);
+                HttpResponse response = new HttpResponse(
+                        200,
+                        "OK",
+                        "text/html; charset=UTF-8",
+                        "<h1>Hello from Java!</h1>"
+                );
 
-                String response = """
-                        HTTP/1.1 200 OK\r
-                        Content-Type: text/html; charset=UTF-8\r
-                        Content-Length: %d\r
-                        Connection: close\r
-                        \r
-                        %s""".formatted(body.length, html);
-
-                output.write(response.getBytes(StandardCharsets.UTF_8));
+                output.write(response.toBytes());
             }
         }
     }
