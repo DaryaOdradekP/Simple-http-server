@@ -6,27 +6,81 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class SimpleHttpServer {
+public class SimpleHttpServer implements AutoCloseable {
 
-    private static final int PORT = 8080;
-    private static final int WORKER_COUNT = 4;
+    private final int requestedPort;
+    private final ExecutorService executor;
+    private final Router router;
+
+    private volatile boolean running;
+    private volatile ServerSocket serverSocket;
+
+    public SimpleHttpServer(int port, int workerCount) {
+        this.requestedPort = port;
+        this.executor = Executors.newFixedThreadPool(workerCount);
+        this.router = new Router();
+    }
 
     public static void main(String[] args) throws IOException {
-        Router router = new Router();
-
-        try (ServerSocket serverSocket = new ServerSocket(PORT); ExecutorService executor = Executors.newFixedThreadPool(WORKER_COUNT)) {
-            System.out.println("Server started: http://localhost:" + PORT);
-
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-
-                executor.submit(() -> handleClient(clientSocket, router));
-            }
+        try (SimpleHttpServer server = new SimpleHttpServer(8080, 4)) {
+            server.start();
         }
+    }
+
+    public void start() throws IOException {
+        try (ServerSocket socket = new ServerSocket(requestedPort)) {
+            serverSocket = socket;
+            running = true;
+
+            System.out.println(
+                    "Server started: http://localhost:" + getPort()
+            );
+
+            while (running) {
+                try {
+                    Socket clientSocket = socket.accept();
+
+                    executor.submit(
+                            () -> handleClient(clientSocket, router)
+                    );
+                } catch (SocketException exception) {
+                    if (running) {
+                        throw exception;
+                    }
+                }
+            }
+        } finally {
+            running = false;
+            serverSocket = null;
+            executor.shutdown();
+        }
+    }
+
+    public int getPort() {
+        ServerSocket socket = serverSocket;
+
+        if (socket == null) {
+            throw new IllegalStateException("Server has not started yet");
+        }
+
+        return socket.getLocalPort();
+    }
+
+    @Override
+    public void close() throws IOException {
+        running = false;
+
+        ServerSocket socket = serverSocket;
+        if (socket != null) {
+            socket.close();
+        }
+
+        executor.shutdown();
     }
 
     private static void handleClient(Socket clientSocket, Router router) {
