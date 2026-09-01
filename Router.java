@@ -9,6 +9,15 @@ public class Router {
     public HttpResponse route(HttpRequest request) throws IOException {
         String path = request.getPath();
 
+        if (!"GET".equals(request.getMethod())) {
+            return new HttpResponse(
+                    405,
+                    "Method Not Allowed",
+                    "text/html; charset=UTF-8",
+                    "<h1>405 Method Not Allowed</h1><p>This server currently supports GET requests only.</p>"
+            );
+        }
+
         if (path.equals("/")) {
             return htmlFile("index.html");
         }

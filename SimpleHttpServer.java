@@ -36,21 +36,47 @@ public class SimpleHttpServer {
                                 StandardCharsets.UTF_8
                         )
                 ); OutputStream output = socket.getOutputStream()) {
-            HttpParser parser = new HttpParser();
-            HttpRequest request = parser.parse(input);
+            try {
+                HttpParser parser = new HttpParser();
+                HttpRequest request = parser.parse(input);
 
-            System.out.printf(
-                    "[%s] %s %s%n",
-                    Thread.currentThread().getName(),
-                    request.getMethod(),
-                    request.getPath()
-            );
+                System.out.printf(
+                        "[%s] %s %s%n",
+                        Thread.currentThread().getName(),
+                        request.getMethod(),
+                        request.getPath()
+                );
 
-            HttpResponse response = router.route(request);
-            output.write(response.toBytes());
+                HttpResponse response = router.route(request);
+                output.write(response.toBytes());
 
-        } catch (IOException | IllegalArgumentException exception) {
-            System.err.println("Failed to process request: " + exception.getMessage());
+            } catch (IllegalArgumentException exception) {
+                System.err.println("Bad request: " + exception.getMessage());
+
+                HttpResponse response = new HttpResponse(
+                        400,
+                        "Bad Request",
+                        "text/html; charset=UTF-8",
+                        "<h1>400 Bad Request</h1><p>The server could not parse this request.</p>"
+                );
+
+                output.write(response.toBytes());
+
+            } catch (IOException exception) {
+                System.err.println("Server error: " + exception.getMessage());
+
+                HttpResponse response = new HttpResponse(
+                        500,
+                        "Internal Server Error",
+                        "text/html; charset=UTF-8",
+                        "<h1>500 Internal Server Error</h1><p>Something went wrong on the server.</p>"
+                );
+
+                output.write(response.toBytes());
+            }
+
+        } catch (IOException exception) {
+            System.err.println("Could not send response: " + exception.getMessage());
         }
     }
 }
