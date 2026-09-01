@@ -1,8 +1,8 @@
+package dev.dasha.httpserver;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class Router {
 
@@ -53,14 +53,24 @@ public class Router {
     }
 
     private HttpResponse htmlFile(String fileName) throws IOException {
-        Path filePath = Path.of("public", fileName);
-        String html = Files.readString(filePath, StandardCharsets.UTF_8);
+        String resourcePath = "/public/" + fileName;
 
-        return new HttpResponse(
-                200,
-                "OK",
-                "text/html; charset=UTF-8",
-                html
-        );
+        try (InputStream input = Router.class.getResourceAsStream(resourcePath)) {
+            if (input == null) {
+                throw new IOException("Static file not found: " + resourcePath);
+            }
+
+            String html = new String(
+                    input.readAllBytes(),
+                    StandardCharsets.UTF_8
+            );
+
+            return new HttpResponse(
+                    200,
+                    "OK",
+                    "text/html; charset=UTF-8",
+                    html
+            );
+        }
     }
 }
