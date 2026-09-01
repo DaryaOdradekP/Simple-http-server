@@ -26,12 +26,25 @@ public class HttpParser {
 
         Map<String, String> headers = new LinkedHashMap<>();
 
-        String headerLine;
-        while ((headerLine = input.readLine()) != null && !headerLine.isEmpty()) {
+        while (true) {
+            String headerLine = input.readLine();
+
+            if (headerLine == null) {
+                throw new IllegalArgumentException(
+                        "Request headers are incomplete"
+                );
+            }
+
+            if (headerLine.isEmpty()) {
+                break;
+            }
+
             int colonIndex = headerLine.indexOf(':');
 
             if (colonIndex <= 0) {
-                throw new IllegalArgumentException("Invalid header: " + headerLine);
+                throw new IllegalArgumentException(
+                        "Invalid header: " + headerLine
+                );
             }
 
             String name = headerLine.substring(0, colonIndex).trim();

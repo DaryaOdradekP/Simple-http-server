@@ -1,6 +1,8 @@
 package dev.dasha.httpserver;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class HttpRequest {
@@ -19,7 +21,14 @@ public class HttpRequest {
         this.method = method;
         this.path = path;
         this.version = version;
-        this.headers = new LinkedHashMap<>(headers);
+
+        Map<String, String> normalizedHeaders = new LinkedHashMap<>();
+
+        headers.forEach((name, value)
+                -> normalizedHeaders.put(name.toLowerCase(Locale.ROOT), value)
+        );
+
+        this.headers = Collections.unmodifiableMap(normalizedHeaders);
     }
 
     public String getMethod() {
@@ -35,10 +44,10 @@ public class HttpRequest {
     }
 
     public Map<String, String> getHeaders() {
-        return Map.copyOf(headers);
+        return headers;
     }
 
     public String getHeader(String name) {
-        return headers.get(name);
+        return headers.get(name.toLowerCase(Locale.ROOT));
     }
 }

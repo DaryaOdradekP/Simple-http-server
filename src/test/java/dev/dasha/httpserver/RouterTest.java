@@ -61,6 +61,7 @@ class RouterTest {
         );
 
         assertTrue(rawResponse.startsWith("HTTP/1.1 405 Method Not Allowed\r\n"));
+        assertTrue(rawResponse.contains("Allow: GET\r\n"));
     }
 
     private HttpRequest request(String method, String path) {

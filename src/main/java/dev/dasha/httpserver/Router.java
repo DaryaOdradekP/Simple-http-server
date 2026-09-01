@@ -3,6 +3,7 @@ package dev.dasha.httpserver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class Router {
 
@@ -14,7 +15,8 @@ public class Router {
                     405,
                     "Method Not Allowed",
                     "text/html; charset=UTF-8",
-                    "<h1>405 Method Not Allowed</h1><p>This server currently supports GET requests only.</p>"
+                    "<h1>405 Method Not Allowed</h1><p>This server currently supports GET requests only.</p>",
+                    Map.of("Allow", "GET")
             );
         }
 
